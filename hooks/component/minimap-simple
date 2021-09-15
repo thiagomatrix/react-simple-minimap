@@ -1,0 +1,78 @@
+import React, { useEffect, useRef, useState } from "react";
+
+function Minimap(props) {
+  const [scrollPercent, setScrollPerfect] = useState(0);
+  const [windowScroll, setWindowScroll] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(
+    document.documentElement.clientWidth
+  );
+
+  const { of } = props;
+  const previewStyle = computePreviewStyle();
+  const minimapStyle = computeMinimapStyle();
+
+  const refMinimap = useRef();
+
+  useEffect(() => {
+    window.addEventListener("scroll", updateScrollPercent);
+    window.addEventListener("resize", updateWidth);
+    return () => {
+      window.removeEventListener("scroll", updateScrollPercent);
+      window.removeEventListener("resize", updateWidth);
+    };
+  }, [updateScrollPercent, updateWidth]);
+
+  function updateWidth() {
+    setWindowWidth(document.documentElement.clientWidth);
+  }
+
+  function updateScrollPercent() {
+    const winScroll =
+      document.body.scrollTop || document.documentElement.scrollTop;
+
+    const height =
+      document.documentElement.scrollHeight -
+      document.documentElement.clientHeight;
+
+    const scrolled = winScroll / height;
+    scrollToPercent();
+    setScrollPerfect(scrolled);
+  }
+
+  function scrollToPercent() {
+    const minimap = refMinimap.current;
+
+    const minimapHeight = minimap.clientHeight;
+    const scrollHeight = minimap.scrollHeight;
+
+    const height = scrollHeight - minimapHeight;
+
+    minimap.scrollTo(0, height * scrollPercent);
+  }
+
+  function computePreviewStyle() {
+    const { width } = props;
+    const scale = width / windowWidth;
+    return { transform: `scale(${scale || 1})` };
+  }
+
+  function computeMinimapStyle() {
+    const { width, height } = props;
+    return { width, height };
+  }
+
+  return (
+    <div className="minimapWindow" style={minimapStyle} ref={refMinimap}>
+      <div className="minimapWindow__preview" style={previewStyle}>
+        {of}
+      </div>
+    </div>
+  );
+}
+
+Minimap.defaultProps = {
+  width: 114,
+  height: 300,
+};
+
+export default Minimap;
